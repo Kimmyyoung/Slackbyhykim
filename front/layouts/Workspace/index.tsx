@@ -28,12 +28,11 @@ const Menu = loadable(()=>import('@components/Menu'));
 
 //Children 이 필요 없는 Component 의 경우 : VFC
 const Workspace : VFC = ()=>{
-    const {workspace} = useParams<{workspace?: string}>();
-     const  {data:userData, error, mutate :revalidateUser} = useSWR('/api/users', fetcher, {
+    const { workspace } = useParams<{ workspace: string }>();
+    const  {data:userData, error, mutate :revalidateUser} = useSWR('/api/users', fetcher, {
         dedupingInterval: 2000,
     });
     const { data: channelData} = useSWR<IChannel[]>(userData ? `/api/workspaces/${workspace}/channels` : null, fetcher);
-    const { data: memeberData} = useSWR<IChannel[]>(userData ? `/api/workspaces/${workspace}/members` : null, fetcher);
 
 
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -45,7 +44,6 @@ const Workspace : VFC = ()=>{
     
     const [newWorkspace, onChangeNewWorkspace, setNewWorkspace] = useInput('');
     const [newUrl, onChangeNewUrl, setNewUrl] = useInput('');
-
     //socket
     const [socket, disconnect] = useSocket(workspace);
 
@@ -59,6 +57,34 @@ const Workspace : VFC = ()=>{
             disconnect();
         }
     },[workspace, disconnect]);
+
+    const onCreateWorkspace = useCallback(
+        (e) => {
+          e.preventDefault();
+          if (!newWorkspace || !newWorkspace.trim()) {
+            return;
+          }
+          if (!newUrl || !newUrl.trim()) {
+            return;
+          }
+          axios
+            .post('/api/workspaces', {
+              workspace: newWorkspace,
+              url: newUrl,
+            })
+            .then(() => {
+              revalidateUser();
+              setShowCreateWorkspaceModal(false);
+              setNewWorkspace('');
+              setNewUrl('');
+            })
+            .catch((error) => {
+              console.dir(error);
+              toast.error(error.response?.data, { position: 'bottom-center' });
+            });
+        },
+        [newWorkspace, newUrl],
+      );
 
     const onLogOut = useCallback(() => {
         //localhost 의 url 은 최대한 안적어 주는 것이 좋음 
@@ -93,14 +119,9 @@ const Workspace : VFC = ()=>{
         setShowCreateChannelModal((prev) => !prev);
     }, []);
 
-    const onCreateWorkspace = useCallback(() => {
-
-    }, []);
-
     const onClickInviteWorkspace = useCallback(()=>{
         setShowInviteWorkspaceModal(true);
     },[]);
-
 
     return (
         <div>
@@ -136,7 +157,6 @@ const Workspace : VFC = ()=>{
                                 <button onClick={onClickAddChannel}>Add Channel</button>
                                 <button onClick={onLogOut}>Logout</button>
                             </WorkspaceModal>
-
                     </Menu> 
 
                     <ChannelList />
