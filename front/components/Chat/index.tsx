@@ -31,6 +31,7 @@ const Chat: VFC<Props> = ({data})=>{
         }
     })
 },[data.content]);
+//useMemo => Function 의 리랜더링을 피하는 react hook
 
     return (
        <ChatWrapper>
