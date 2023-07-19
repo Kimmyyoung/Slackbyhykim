@@ -32,6 +32,7 @@ const Workspace : VFC = ()=>{
     const  {data:userData, error, mutate :revalidateUser} = useSWR('/api/users', fetcher, {
         dedupingInterval: 2000,
     });
+    console.log(userData);
     const { data: channelData} = useSWR<IChannel[]>(userData ? `/api/workspaces/${workspace}/channels` : null, fetcher);
 
 
